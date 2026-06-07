@@ -31,11 +31,15 @@ if [ -n "$HY2_URI" ]; then
   INSECURE="$(get_param "$QUERY" insecure)"
   MPORT="$(get_param "$QUERY" mport)"
   PIN_SHA256="$(get_param "$QUERY" pinSHA256)"
-  # normalize insecure: URI uses 0/1, hy2 config uses true/false
-  case "$INSECURE" in
-    0|false) INSECURE="false" ;;
-    *) INSECURE="true" ;;
-  esac
+  # pinSHA256 requires insecure=true to skip CA verification and rely on pin
+  if [ -n "$PIN_SHA256" ]; then
+    INSECURE="true"
+  else
+    case "$INSECURE" in
+      0|false) INSECURE="false" ;;
+      *) INSECURE="true" ;;
+    esac
+  fi
 else
   SERVER="${HY2_SERVER:?HY2_SERVER or HY2_URI is required}"
   PASSWORD="${HY2_PASSWORD:?HY2_PASSWORD is required}"
