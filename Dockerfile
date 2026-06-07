@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-ARG HY2_VERSION=v2.6.1
+ARG HY2_VERSION=v2.9.2
 ARG TARGETARCH=amd64
 
 RUN apk add --no-cache ca-certificates curl && \
