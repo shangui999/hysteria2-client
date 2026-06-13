@@ -13,12 +13,9 @@ HTTP_PORT="${HY2_HTTP_PORT:-10809}"
 
 if [ -n "$HY2_URI" ]; then
   URI="$HY2_URI"
-  # strip scheme
   URI="${URI#hysteria2://}"
   URI="${URI#hy2://}"
-  # strip fragment
   URI="${URI%%#*}"
-  # split userinfo@hostport?query
   USERINFO="${URI%%@*}"
   REST="${URI#*@}"
   HOSTPORT="${REST%%\?*}"
@@ -31,7 +28,8 @@ if [ -n "$HY2_URI" ]; then
   INSECURE="$(get_param "$QUERY" insecure)"
   MPORT="$(get_param "$QUERY" mport)"
   PIN_SHA256="$(get_param "$QUERY" pinSHA256)"
-  # pinSHA256 requires insecure=true to skip CA verification and rely on pin
+  UP="$(get_param "$QUERY" up)"
+  DOWN="$(get_param "$QUERY" down)"
   if [ -n "$PIN_SHA256" ]; then
     INSECURE="true"
   else
@@ -47,7 +45,13 @@ else
   INSECURE="${HY2_INSECURE:-true}"
   MPORT="${HY2_MPORT:-}"
   PIN_SHA256=""
+  UP=""
+  DOWN=""
 fi
+
+# env vars override URI params
+[ -n "$HY2_UP" ] && UP="$HY2_UP"
+[ -n "$HY2_DOWN" ] && DOWN="$HY2_DOWN"
 
 # build config
 cat > /etc/hysteria/config.yaml <<EOF
@@ -74,6 +78,15 @@ transport:
     hopPorts: ${MPORT}
     hopInterval: 30s
 EOF
+fi
+
+if [ -n "$UP" ] || [ -n "$DOWN" ]; then
+  cat >> /etc/hysteria/config.yaml <<EOF
+
+bandwidth:
+EOF
+  [ -n "$UP" ] && echo "  up: ${UP}" >> /etc/hysteria/config.yaml
+  [ -n "$DOWN" ] && echo "  down: ${DOWN}" >> /etc/hysteria/config.yaml
 fi
 
 cat >> /etc/hysteria/config.yaml <<EOF
